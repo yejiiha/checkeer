@@ -1,14 +1,15 @@
-import { Tabs } from 'expo-router';
-import { Home, User, Trophy, Calendar } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import { Platform, StyleSheet, Pressable, View, LayoutChangeEvent } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { cn } from '@/lib/utils';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { mockUser } from '@/src/lib/mock-data';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { Tabs, useRouter } from 'expo-router';
+import { Bell, Calendar, Home, Trophy, User } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Image, LayoutChangeEvent, Platform, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // 햅틱 - 선택적 import
 let Haptics: any = null;
@@ -24,6 +25,38 @@ try {
   BlurView = require('expo-blur').BlurView;
 } catch {
   // expo-blur가 설치되지 않은 경우 무시
+}
+
+// 홈 화면 커스텀 헤더
+function HomeHeader() {
+  const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const hasLiquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
+  const iconColor = colorScheme === 'dark' ? '#ffffff' : '#000000';
+
+  return (
+    <View className="w-full flex-1 flex-row items-center justify-between py-2">
+      {/* 왼쪽: 프로필 이미지 + 유저 이름 */}
+      <View className="flex-row items-center gap-3">
+        <Image
+          source={{ uri: 'https://via.placeholder.com/40' }}
+          className="h-10 w-10 rounded-full bg-gray-200"
+        />
+        <Text className="text-base font-semibold text-gray-900 dark:text-white">
+          {mockUser.memberName}
+        </Text>
+      </View>
+
+      {/* 오른쪽: 알림 아이콘 (Liquid Glass 원형 버튼) */}
+      <Pressable
+        onPress={() => router.push('/notifications' as any)}
+        className="h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white shadow-md dark:bg-white/15">
+        {/* Liquid Glass 배경 */}
+        {hasLiquidGlass && <GlassView style={StyleSheet.absoluteFill} />}
+        <Bell size={24} color={iconColor} />
+      </Pressable>
+    </View>
+  );
 }
 
 // 탭 아이콘 매핑
@@ -369,7 +402,15 @@ export default function TabsLayout() {
           : iconColor,
         sceneStyle: hasLiquidGlass ? { paddingTop: headerHeight } : undefined,
       }}>
-      <Tabs.Screen name="home" options={{ title: '홈' }} />
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: '홈',
+          headerTitle: () => <HomeHeader />,
+          headerStyle: { height: 60 + insets.top }, // 헤더 높이 조정
+          headerTitleContainerStyle: { width: '100%' }, // 타이틀 컨테이너 전체 너비
+        }}
+      />
       <Tabs.Screen name="races" options={{ title: '대회' }} />
       <Tabs.Screen name="records" options={{ title: '기록' }} />
       <Tabs.Screen name="my" options={{ title: '마이' }} />

@@ -8,7 +8,7 @@ import type { HomeResponseDto } from '../api/models';
 // 홈 화면 Mock 데이터
 export const mockHomeData: HomeResponseDto = {
   memberId: 1,
-  memberName: '테스트 유저',
+  memberName: '하예지2',
   bestFullRecord: {
     raceId: 1,
     bestRecord: '03:45:30',
@@ -45,6 +45,16 @@ export const mockHomeData: HomeResponseDto = {
       racePlace: '대구 스타디움',
       pageUrl: 'https://example.com',
     },
+    {
+      raceId: 139,
+      raceTitle: 'MBN SEOUL MARATHON',
+      raceDate: '2025-11-16',
+      raceTime: '08:00',
+      raceImgUrl: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80',
+      raceCourses: ['HALF', 'TEN'],
+      racePlace: '광화문광장',
+      pageUrl: 'https://mbn-seoulmarathon.com/ko/',
+    },
   ],
   recordInfos: [
     {
@@ -73,7 +83,60 @@ export const mockHomeData: HomeResponseDto = {
 // Mock 사용자 데이터
 export const mockUser = {
   memberId: 1,
-  memberName: '테스트 유저',
+  memberName: '하예지2',
+};
+
+// Mock 레이스 상세 데이터 (GET /api/v1/race/{raceId}/detail)
+export const mockRaceDetail = {
+  raceInfo: {
+    raceId: 139,
+    raceTitle: 'MBN SEOUL MARATHON',
+    raceDate: '2025.11.16',
+    raceTime: '08:00 ~ 11:00',
+    racePlace: '광화문광장',
+    raceImgUrl: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80', // 마라톤 이미지
+    raceCourses: ['HALF', 'TEN'],
+    pageUrl: 'https://mbn-seoulmarathon.com/ko/',
+    recordType: 'SMARTCHIP',
+  },
+  raceMemberInfo: {
+    raceId: 139,
+    raceMemberId: 2024,
+    memberId: 123,
+    memberName: '하예지2',
+    bib: '22977',
+    status: 'FINISH',
+    course: 'HALF',
+    thumbnailImgUrl:
+      'https://api.checkmy.run/image/race/139/dressup/thumbnail/Ep_RdwAKefBnBkTe.jpg',
+    imgUrl: 'https://api.checkmy.run/image/race/139/dressup/press/Ep_RdwAKefBnBkTe.jpg',
+    avgPace: '06:05',
+    expectedDistance: 21.1,
+    record: '02:08:33',
+    passingAlert: false,
+    createdAt: '2025-11-15T18:30:56',
+    targetRecord: '02:10:00',
+  },
+  groupInfo: [
+    {
+      crewGroup: true,
+      groupTitle: '여의도러닝크루',
+      broadCastKey: '6HuubhufTiRnSiC2TxX7dXktJnHKFiA0WDh4gfpXCI7',
+      groupAdminName: '여의도러닝크루',
+    },
+    {
+      crewGroup: true,
+      groupTitle: '소란스런',
+      broadCastKey: 'xTRRLH5avGzgxMHx1sEWnKkv49REQRLV9456vqimI4A',
+      groupAdminName: '소란스런',
+    },
+    {
+      crewGroup: true,
+      groupTitle: '아라온러닝',
+      broadCastKey: 'VpmTRP6nfK2xSPwFQId95XRe6EAzv1JxMA1IRP5CfdA',
+      groupAdminName: '아라온러닝',
+    },
+  ],
 };
 
 // Mock 크루 데이터
@@ -110,5 +173,19 @@ export const mockApi = {
   async getCrews() {
     await this.delay();
     return mockCrews;
+  },
+
+  async getRaceDetail(raceId: number) {
+    await this.delay();
+    // 현재는 raceId 139만 mock 데이터가 있음
+    if (raceId === 139) {
+      return mockRaceDetail;
+    }
+    // 다른 raceId는 기본 데이터 반환
+    return {
+      ...mockRaceDetail,
+      raceInfo: { ...mockRaceDetail.raceInfo, raceId },
+      raceMemberInfo: { ...mockRaceDetail.raceMemberInfo, raceId },
+    };
   },
 };

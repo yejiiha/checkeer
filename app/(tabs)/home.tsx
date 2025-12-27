@@ -1,11 +1,11 @@
-import { View, ScrollView, RefreshControl, Platform, ImageBackground } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCallback, useState } from 'react';
 import { useGetHomeInfos } from '@/src/api/generated/02-homecontroller/02-homecontroller';
 import { mockHomeData } from '@/src/lib/mock-data';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Platform, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const hasLiquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
 
@@ -59,24 +59,40 @@ function PersonalBestCard({
 }
 
 // 다가오는 대회 카드
-function UpcomingRaceCard({ title, date, place }: { title: string; date: string; place: string }) {
+function UpcomingRaceCard({
+  raceId,
+  title,
+  date,
+  place,
+  onPress,
+}: {
+  raceId: number;
+  title: string;
+  date: string;
+  place: string;
+  onPress?: () => void;
+}) {
   if (hasLiquidGlass) {
     return (
-      <GlassView
-        style={{ width: 240, borderRadius: 16, padding: 16, marginRight: 12 }}
-        glassEffectStyle="clear">
-        <Text className="text-sm font-semibold text-blue-900">{title}</Text>
-        <Text className="mt-1 text-xs text-blue-700">{date}</Text>
-        <Text className="text-xs text-blue-600">{place}</Text>
-      </GlassView>
+      <Pressable onPress={onPress}>
+        <GlassView
+          style={{ width: 240, borderRadius: 16, padding: 16, marginRight: 12 }}
+          glassEffectStyle="clear">
+          <Text className="text-sm font-semibold text-blue-900">{title}</Text>
+          <Text className="mt-1 text-xs text-blue-700">{date}</Text>
+          <Text className="text-xs text-blue-600">{place}</Text>
+        </GlassView>
+      </Pressable>
     );
   }
   return (
-    <View className="mr-3 w-60 rounded-xl bg-blue-50/90 p-4 shadow-sm">
-      <Text className="text-sm font-semibold text-blue-900">{title}</Text>
-      <Text className="mt-1 text-xs text-blue-600">{date}</Text>
-      <Text className="text-xs text-blue-500">{place}</Text>
-    </View>
+    <Pressable onPress={onPress}>
+      <View className="mr-3 w-60 rounded-xl bg-blue-50/90 p-4 shadow-sm">
+        <Text className="text-sm font-semibold text-blue-900">{title}</Text>
+        <Text className="mt-1 text-xs text-blue-600">{date}</Text>
+        <Text className="text-xs text-blue-500">{place}</Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -107,6 +123,7 @@ function RecordHistoryCard({
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
   // API 호출 (에러 시 mock 데이터 사용)
@@ -114,6 +131,11 @@ export default function HomeScreen() {
 
   // 에러 시 mock 데이터 사용
   const homeData = isError || !data ? mockHomeData : data;
+
+  // 대회 상세 페이지로 이동
+  const handleRacePress = (raceId: number) => {
+    router.push(`/race/${raceId}` as any);
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -130,35 +152,6 @@ export default function HomeScreen() {
             className="flex-1"
             contentContainerStyle={{ paddingBottom: 100 }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-            {/* 인사말 */}
-            <View className="px-5 pt-4">
-              <Text className="text-2xl font-bold text-gray-900">
-                안녕하세요, {homeData.memberName}님 👋
-              </Text>
-            </View>
-
-            {/* 개인 최고 기록 */}
-            <View className="mt-6 px-5">
-              <Text className="mb-3 text-lg font-semibold text-gray-900">개인 최고 기록</Text>
-              <View className="flex-row gap-2">
-                <PersonalBestCard
-                  title="풀코스"
-                  record={homeData.bestFullRecord?.bestRecord || null}
-                  label="42.195km"
-                />
-                <PersonalBestCard
-                  title="하프"
-                  record={homeData.bestHalfRecord?.bestRecord || null}
-                  label="21.0975km"
-                />
-                <PersonalBestCard
-                  title="10K"
-                  record={homeData.bestTenRecord?.bestRecord || null}
-                  label="10km"
-                />
-              </View>
-            </View>
-
             {/* 다가오는 대회 */}
             <View className="mt-8">
               <View className="flex-row items-center justify-between px-5">
@@ -173,9 +166,11 @@ export default function HomeScreen() {
                 {homeData.raceInfos?.map((race) => (
                   <UpcomingRaceCard
                     key={race.raceId}
+                    raceId={race.raceId || 0}
                     title={race.raceTitle || ''}
                     date={race.raceDate || ''}
                     place={race.racePlace || ''}
+                    onPress={() => race.raceId && handleRacePress(race.raceId)}
                   />
                 ))}
                 {(!homeData.raceInfos || homeData.raceInfos.length === 0) && (
@@ -272,9 +267,11 @@ export default function HomeScreen() {
             {homeData.raceInfos?.map((race) => (
               <UpcomingRaceCard
                 key={race.raceId}
+                raceId={race.raceId || 0}
                 title={race.raceTitle || ''}
                 date={race.raceDate || ''}
                 place={race.racePlace || ''}
+                onPress={() => race.raceId && handleRacePress(race.raceId)}
               />
             ))}
             {(!homeData.raceInfos || homeData.raceInfos.length === 0) && (
