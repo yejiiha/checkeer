@@ -47,4 +47,3 @@ export const COURSE_DISTANCES = {
   HALF: 21.0975,
   FULL: 42.195,
 } as const;
-

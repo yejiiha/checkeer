@@ -1,7 +1,7 @@
-import { View, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell } from 'lucide-react-native';
+import { ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function NotificationsScreen() {
   return (
