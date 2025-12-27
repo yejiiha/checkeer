@@ -58,11 +58,18 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-          }}
-        >
+          }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="notifications"
+            options={{
+              headerShown: true,
+              title: '알림',
+              headerBackButtonDisplayMode: 'minimal', // iOS: 아이콘만 표시
+            }}
+          />
         </Stack>
         <PortalHost />
       </ThemeProvider>
