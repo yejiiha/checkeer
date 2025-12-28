@@ -1,13 +1,14 @@
 import { CourseBadge } from '@/components/CourseBadge';
 import { Text } from '@/components/ui/text';
 import { mockRaceDetail } from '@/src/lib/mock-data';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Calendar, ChevronRight, ExternalLink, MapPin, Users } from 'lucide-react-native';
 import { Image, Linking, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 
 export default function RaceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const raceId = Number(id);
+  const router = useRouter();
   const { width } = useWindowDimensions();
 
   // TODO: 실제 API 호출로 변경
@@ -143,11 +144,11 @@ export default function RaceDetailScreen() {
                   {groupInfo.map((group) => (
                     <Pressable
                       key={group.broadCastKey}
+                      onPress={() => router.push(`/broadcast/${group.broadCastKey}` as any)}
                       className="flex-row items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
                       <Text className="font-medium text-gray-900 dark:text-white">
                         {group.groupTitle}
                       </Text>
-
                       <ChevronRight size={20} color="#6B7280" />
                     </Pressable>
                   ))}
