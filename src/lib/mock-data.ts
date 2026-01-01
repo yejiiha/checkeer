@@ -107,9 +107,8 @@ export const mockRaceDetail = {
     bib: '22977',
     status: 'FINISH',
     course: 'HALF',
-    thumbnailImgUrl:
-      'https://api.checkmy.run/image/race/139/dressup/thumbnail/Ep_RdwAKefBnBkTe.jpg',
-    imgUrl: 'https://api.checkmy.run/image/race/139/dressup/press/Ep_RdwAKefBnBkTe.jpg',
+    thumbnailImgUrl: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=200&q=80',
+    imgUrl: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=400&q=80',
     avgPace: '06:05',
     expectedDistance: 21.1,
     record: '02:08:33',
@@ -553,4 +552,3 @@ export const mockApi = {
     return mockBroadcastLive;
   },
 };
-
