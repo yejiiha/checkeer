@@ -1,4 +1,5 @@
 import '@/global.css';
+import 'react-native-reanimated';
 
 import { NAV_THEME } from '@/lib/theme';
 import { useAuthStore } from '@/src/stores/auth-store';
