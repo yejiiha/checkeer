@@ -19,9 +19,10 @@ export interface RaceReport {
 
 interface CheckpointSectionProps {
   report: RaceReport;
+  onMemberPress?: (member: RaceMember) => void;
 }
 
-export function CheckpointSection({ report }: CheckpointSectionProps) {
+export function CheckpointSection({ report, onMemberPress }: CheckpointSectionProps) {
   return (
     <View className="border-b border-gray-100 dark:border-gray-800">
       {/* 체크포인트 헤더 */}
@@ -49,6 +50,7 @@ export function CheckpointSection({ report }: CheckpointSectionProps) {
               key={member.raceMemberId}
               member={member}
               isLast={idx === report.raceMembers.length - 1}
+              onPress={onMemberPress}
             />
           ))}
         </View>

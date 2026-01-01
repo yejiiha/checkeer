@@ -27,6 +27,7 @@ interface RaceMember {
 interface BroadcastMapViewProps {
   mapUrl: string;
   raceMembers?: RaceMember[];
+  onMemberPress?: (raceMemberId: number) => void;
 }
 
 // Map 데이터 fetch 함수
@@ -53,7 +54,11 @@ const fetchMapData = async (mapUrl: string): Promise<MapData> => {
   return data;
 };
 
-export function BroadcastMapView({ mapUrl, raceMembers = [] }: BroadcastMapViewProps) {
+export function BroadcastMapView({
+  mapUrl,
+  raceMembers = [],
+  onMemberPress,
+}: BroadcastMapViewProps) {
   const mapRef = useRef<MapView>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
@@ -75,54 +80,9 @@ export function BroadcastMapView({ mapUrl, raceMembers = [] }: BroadcastMapViewP
     const loadToken = async () => {
       const token = await tokenUtils.getAccessToken();
       setAccessToken(token);
-      console.log('🔑 Access token loaded:', token?.substring(0, 30) + '...');
     };
     loadToken();
   }, []);
-
-  // 이미지 URL 테스트 (디버깅용)
-  useEffect(() => {
-    if (!accessToken || raceMembers.length === 0) return;
-
-    const testImageFetch = async () => {
-      const testMember = raceMembers[0];
-      console.log('🧪 Testing image fetch for:', testMember.memberName);
-      console.log('📍 URL:', testMember.thumbnailImgUrl);
-
-      try {
-        const response = await fetch(testMember.thumbnailImgUrl, {
-          method: 'GET',
-          headers: {
-            Cookie: `accessToken=${accessToken}`,
-          },
-        });
-
-        console.log('📊 Response status:', response.status);
-        console.log('📊 Response headers:', response.headers);
-        console.log('📊 Content-Type:', response.headers.get('content-type'));
-
-        if (response.ok) {
-          console.log('✅ Image fetch successful!');
-        } else {
-          console.log('❌ Image fetch failed:', response.statusText);
-        }
-      } catch (error) {
-        console.error('❌ Image fetch error:', error);
-      }
-    };
-
-    testImageFetch();
-  }, [accessToken, raceMembers]);
-
-  console.log('BroadcastMapView Debug:', {
-    mapUrl,
-    status,
-    isLoading,
-    isError,
-    error: error?.message,
-    hasData: !!mapData,
-    polylinesLength: mapData?.polylines?.length,
-  });
 
   if (isLoading) {
     return (
@@ -327,7 +287,8 @@ export function BroadcastMapView({ mapUrl, raceMembers = [] }: BroadcastMapViewP
               key={member.raceMemberId}
               coordinate={coordinate}
               anchor={{ x: 0.5, y: 1 }}
-              tracksViewChanges={false}>
+              tracksViewChanges={false}
+              onPress={() => onMemberPress?.(member.raceMemberId)}>
               <View className="items-center">
                 {/* 마커 핀 */}
                 <View style={{ position: 'relative' }}>

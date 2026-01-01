@@ -1,12 +1,19 @@
-import { BroadcastFloatingTab, BroadcastMapView, CheckpointSection } from '@/components/broadcast';
+import {
+  BroadcastFloatingTab,
+  BroadcastMapView,
+  CheckpointSection,
+  GroupSelectSheet,
+  MemberDetailSheet,
+  type RaceMember,
+} from '@/components/broadcast';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { mockBroadcastInfo, mockBroadcastLive, mockRaceDetail } from '@/src/lib/mock-data';
-import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Check, ChevronDown, ChevronLeft, RefreshCw, Share2 } from 'lucide-react-native';
+import { ChevronDown, ChevronLeft, RefreshCw, Share2 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, ScrollView, Share, View } from 'react-native';
 
 export default function BroadcastScreen() {
@@ -15,14 +22,13 @@ export default function BroadcastScreen() {
   const { colorScheme } = useColorScheme();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const memberDetailSheetRef = useRef<BottomSheetModal>(null);
 
   // 상태
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<string>('HALF');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-
-  // BottomSheet snapPoints
-  const snapPoints = useMemo(() => ['50%', '80%'], []);
+  const [selectedMember, setSelectedMember] = useState<RaceMember | null>(null);
 
   // Mock 데이터
   const [broadcastInfo] = useState(mockBroadcastInfo);
@@ -91,27 +97,44 @@ export default function BroadcastScreen() {
     [spinAnim]
   );
 
-  // Modal 열기/닫기
+  // Modal 열기
   const openGroupModal = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
 
-  const closeGroupModal = useCallback(() => {
-    bottomSheetModalRef.current?.dismiss();
+  // 주자 선택 핸들러 (RaceMemberCard에서 호출)
+  const handleMemberPress = useCallback((member: RaceMember) => {
+    setSelectedMember(member);
+    memberDetailSheetRef.current?.present();
   }, []);
 
-  // Backdrop 렌더링
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-        pressBehavior="close"
-      />
-    ),
-    []
+  // 주자 선택 핸들러 (BroadcastMapView에서 호출 - raceMemberId로 찾기)
+  const handleMapMemberPress = useCallback(
+    (raceMemberId: number) => {
+      // 모든 raceReports에서 해당 멤버 찾기
+      const member = liveData.raceReports
+        .flatMap((report) => report.raceMembers)
+        .find((m) => m.raceMemberId === raceMemberId);
+
+      if (member) {
+        setSelectedMember(member);
+        memberDetailSheetRef.current?.present();
+      }
+    },
+    [liveData.raceReports]
+  );
+
+  // 그룹 선택 핸들러
+  const handleSelectGroup = useCallback(
+    (broadcastKeyToSelect: string) => {
+      bottomSheetModalRef.current?.dismiss();
+      if (broadcastKeyToSelect !== broadcastKey) {
+        setTimeout(() => {
+          router.replace(`/broadcast/${broadcastKeyToSelect}` as any);
+        }, 300);
+      }
+    },
+    [broadcastKey, router]
   );
 
   const iconColor = colorScheme === 'dark' ? '#ffffff' : '#000000';
@@ -202,7 +225,11 @@ export default function BroadcastScreen() {
             contentContainerStyle={{ paddingBottom: 120 }}
             showsVerticalScrollIndicator={false}>
             {liveData.raceReports.map((report) => (
-              <CheckpointSection key={report.zoneId} report={report} />
+              <CheckpointSection
+                key={report.zoneId}
+                report={report}
+                onMemberPress={handleMemberPress}
+              />
             ))}
           </ScrollView>
         )}
@@ -222,6 +249,7 @@ export default function BroadcastScreen() {
                 status: member.status,
                 avgPace: member.avgPace,
               }))}
+            onMemberPress={handleMapMemberPress}
           />
         )}
 
@@ -236,66 +264,15 @@ export default function BroadcastScreen() {
       </View>
 
       {/* 그룹 선택 Modal */}
-      <BottomSheetModal
+      <GroupSelectSheet
         ref={bottomSheetModalRef}
-        snapPoints={snapPoints}
-        backdropComponent={renderBackdrop}
-        enablePanDownToClose
-        backgroundStyle={{
-          backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF',
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: colorScheme === 'dark' ? '#6B7280' : '#D1D5DB',
-          width: 40,
-        }}>
-        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
-          {/* 헤더 */}
-          <View className="mb-4 flex-row items-center justify-between py-2">
-            <Text className="text-lg font-bold text-gray-900 dark:text-white">그룹 선택</Text>
-          </View>
+        groupList={groupList}
+        selectedBroadcastKey={broadcastKey}
+        onSelectGroup={handleSelectGroup}
+      />
 
-          {/* 그룹 목록 */}
-          {groupList.map((group) => {
-            const isSelected = group.broadCastKey === broadcastKey;
-            return (
-              <Pressable
-                key={group.broadCastKey}
-                onPress={() => {
-                  closeGroupModal();
-                  if (!isSelected) {
-                    setTimeout(() => {
-                      router.replace(`/broadcast/${group.broadCastKey}` as any);
-                    }, 300);
-                  }
-                }}
-                className={cn(
-                  'mb-2 flex-row items-center justify-between rounded-xl px-4 py-4',
-                  isSelected
-                    ? 'bg-blue-50 dark:bg-blue-900/30'
-                    : 'active:bg-gray-100 dark:active:bg-gray-700'
-                )}>
-                <View>
-                  <Text
-                    className={cn(
-                      'text-base font-semibold',
-                      isSelected
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-900 dark:text-white'
-                    )}>
-                    {group.groupTitle}
-                  </Text>
-                  {group.groupAdminName && (
-                    <Text className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                      관리자: {group.groupAdminName}
-                    </Text>
-                  )}
-                </View>
-                {isSelected && <Check size={20} color="#3B82F6" />}
-              </Pressable>
-            );
-          })}
-        </BottomSheetScrollView>
-      </BottomSheetModal>
+      {/* 주자 상세 정보 Modal */}
+      <MemberDetailSheet ref={memberDetailSheetRef} member={selectedMember} />
     </>
   );
 }
